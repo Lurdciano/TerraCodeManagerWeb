@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TerraCodeManager — Sistema de Gestión</title>
+  <meta name="description" content="TerraCodeManager — Sistema de gestión de ventas, inventario y reportes para pequeños comercios. Demo descargable." />
+  <style>
+    /* ====== Variables de tema ====== */
+    :root{
+      --bg:#050b1a;
+      --panel:#0f1a2f;
+      --muted:#9ba4bd;
+      --accent-cyan:#00d4ff;
+      --accent-efectivo:#22c55e;
+      --accent-transfer:#38bdf8;
+      --accent-fiado:#f43f5e;
+      --accent-ganancia:#facc15;
+      --glass: rgba(255,255,255,0.045);
+      --radius:16px;
+      --glass-2: rgba(255,255,255,0.025);
+      --shadow: 0 8px 32px rgba(0,0,0,0.65);
+      --surface-border: rgba(255,255,255,0.07);
+      --max-width:1100px;
+      --gap:24px;
+      --header-height: 110px;     /* ← NUEVA VARIABLE: altura del header + margen de seguridad */
+      font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+      color-scheme: dark;
+    }
+
+    *{box-sizing:border-box}
+    html{
+      height:auto;
+      scroll-padding-top: var(--header-height);   /* ← FIX PRINCIPAL: compensa el header sticky */
+    }
+    body{
+      margin:0;
+      min-height:100vh;
+      background: linear-gradient(180deg, #050b1a 0%, #030915 50%, #02060f 100%);
+      color:#e6eef8;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      line-height:1.45;
+      padding: 0 16px 24px;
+    }
+
+    a{color:inherit;text-decoration:none}
+
+    .container{
+      max-width:var(--max-width);
+      margin:0 auto;
+      display:flex;
+      flex-direction:column;
+      gap:var(--gap);
+      padding-top: 24px;
+    }
+
+    header.topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      background:rgba(15,26,47,0.96);
+      backdrop-filter:blur(16px);
+      padding:14px 20px;
+      border-radius:var(--radius);
+      border:1px solid var(--surface-border);
+      box-shadow:var(--shadow);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+    .brand{
+      display:flex;
+      gap:14px;
+      align-items:center;
+    }
+    .logo{
+      width:78px;height:68px;border-radius:12px;
+      flex-shrink:0;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      border:2px solid rgba(0,212,255,0.25);
+    }
+    .logo img{
+      width:100%;height:100%;object-fit:contain;
+    }
+    .brand h1{font-size:18px;margin:0;letter-spacing:0.2px}
+    .brand p{margin:0;font-size:12px;color:var(--muted)}
+
+    nav.nav{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    nav.nav a{
+      padding:8px 12px;border-radius:10px;
+      background:transparent;border:1px solid transparent;
+      font-size:14px;color:var(--muted);
+    }
+    nav.nav a:hover{color:#fff;border-color:var(--surface-border);background:var(--glass)}
+
+    .btn{
+      padding:10px 14px;border-radius:10px;font-weight:700;
+      border:0;cursor:pointer;background:var(--accent-cyan);color:#04202a;
+      box-shadow: 0 6px 18px rgba(0,212,255,0.15);
+    }
+    .btn.outline{
+      background:transparent;color:var(--accent-cyan);border:1px solid rgba(0,212,255,0.15);
+    }
+
+    /* ====== Secciones con compensación de altura ====== */
+    section{
+      background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+      border-radius:var(--radius);
+      padding:22px;
+      border:1px solid var(--surface-border);
+      box-shadow:var(--shadow);
+      scroll-margin-top: var(--header-height);   /* ← FIX SECUNDARIO: evita que el header tape el título */
+    }
+
+    .hero{
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+      border-radius:var(--radius);
+      padding:28px;
+      box-shadow:var(--shadow);
+      border:1px solid var(--surface-border);
+      display:flex;
+      gap:20px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .hero-left{flex:1;min-width:260px}
+    .hero h2{margin:0 0 8px 0;font-size:22px;color:var(--accent-cyan)}
+    .hero h3{margin:0;font-size:28px;line-height:1.12}
+    .hero p{color:var(--muted);margin-top:12px}
+    .hero-visual{
+      width:420px;max-width:48%;
+      border-radius:12px;overflow:hidden;border:1px solid var(--surface-border);
+      background:linear-gradient(180deg,#07101a,#0b1320);
+      padding:12px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.6);
+    }
+
+    .mini-dashboard{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+    .card{background:var(--panel);padding:12px;border-radius:10px;border:1px solid var(--glass-2)}
+    .stat{font-size:18px;color:var(--muted)}
+    .value{font-weight:800;font-size:20px;color:#fff;margin-top:6px}
+
+    .section-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .section-header h3{margin:0;color:var(--accent-cyan)}
+    .module{
+      display:grid;
+      grid-template-columns: 1fr 360px;
+      gap:18px;
+      align-items:start;
+      margin-top:14px;
+    }
+    .module .desc{color:var(--muted)}
+    .features{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}
+    .feature{
+      background:var(--glass);padding:10px;border-radius:10px;border:1px dashed rgba(255,255,255,0.02);
+      font-size:14px;color:var(--muted)
+    }
+    .media-placeholder{
+      width:100%;height:290px;border-radius:10px;background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      display:flex;align-items:center;justify-content:center;color:var(--muted);
+      border:1px solid var(--glass-2);
+    }
+
+    .badge{display:inline-block;padding:6px 10px;border-radius:8px;color:#04202a;font-weight:700;font-size:13px}
+    .b-ef{background:linear-gradient(90deg,var(--accent-efectivo), #26d085)}
+    .b-trans{background:linear-gradient(90deg,var(--accent-transfer), #59c8ff)}
+    .b-fi{background:linear-gradient(90deg,var(--accent-fiado), #ff7b7b)}
+    .b-gain{background:linear-gradient(90deg,var(--accent-ganancia), #ffd667)}
+    .b-total{background:linear-gradient(90deg,var(--accent-cyan), #00e1ff);color:#03303a}
+
+    #image-modal{
+      display:none;
+      position:fixed;
+      top:0;left:0;
+      width:100%;height:100%;
+      background:rgba(5,11,26,0.97);
+      align-items:center;
+      justify-content:center;
+      z-index:10000;
+      padding:20px;
+      box-sizing:border-box;
+      cursor:zoom-out;
+    }
+    .modal-content{position:relative;max-width:92%;max-height:92vh}
+    #modal-image{max-width:100%;max-height:92vh;border-radius:14px;box-shadow:0 30px 80px rgba(0,0,0,0.8);border:2px solid var(--accent-cyan)}
+    .modal-close{position:absolute;top:-52px;right:8px;color:#fff;font-size:46px;font-weight:300;cursor:pointer;line-height:1}
+
+    .accordion{margin-top:12px;border-radius:10px;overflow:hidden}
+    .acc-item{border-top:1px solid var(--surface-border)}
+    .acc-head{padding:12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+    .acc-body{padding:12px;background:transparent;color:var(--muted);display:none}
+    .acc-head h4{margin:0;font-size:15px}
+    .acc-open .acc-body{display:block}
+
+    .progress{
+      background:rgba(255,255,255,0.03);border-radius:10px;overflow:hidden;height:16px;flex:1;border:1px solid var(--glass-2)
+    }
+    .progress > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent-cyan), #00ffd8);width:0%}
+
+    table{width:100%;border-collapse:collapse;margin-top:12px;color:var(--muted)}
+    th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.02);text-align:left}
+    th{color:var(--accent-cyan);font-weight:700}
+
+    footer{display:flex;justify-content:space-between;align-items:center;gap:12px;color:var(--muted);font-size:14px}
+    .social a{margin-left:10px;opacity:0.9}
+
+    .muted{color:var(--muted)}
+    .mt{margin-top:12px}
+    .kbd{background:#06121a;padding:6px 8px;border-radius:6px;border:1px solid rgba(255,255,255,0.02);font-weight:700}
+
+    @media (max-width:920px){
+      .module{grid-template-columns:1fr}
+      .hero-visual{max-width:100%;width:100%}
+      .features{grid-template-columns:1fr}
+      nav.nav{display:none}
+      body{padding:0 12px 18px}
+    }
+    @media (max-width:640px){
+      .hero{padding:22px 18px}
+      .hero h3{font-size:24px}
+      html{scroll-padding-top: 100px;}
+      section{scroll-margin-top: 100px;}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- HEADER (siempre visible) -->
+    <header class="topbar" role="banner" aria-label="TerraCodeManager header">
+      <div class="brand" role="navigation">
+        <div class="logo">
+          <img src="images/icon.ico" alt="TerraCodeManager">
+        </div>
+        <div>
+          <h1>TerraCodeManager</h1>
+          <p class="muted">Gestión de ventas · Inventario · Reportes</p>
+        </div>
+      </div>
+
+      <nav class="nav" aria-label="Main navigation">
+        <a href="#hero" data-scroll>Inicio</a>
+        <a href="#caja" data-scroll>Funciones</a>
+        <a href="#multi" data-scroll>Multi-usuario</a>
+        <a href="#licencia" data-scroll>Licencias</a>
+        <a href="#contact" data-scroll>Contacto</a>
+      </nav>
+    </header>
+
+    <!-- HERO -->
+    <section id="hero" class="hero" aria-labelledby="hero-title">
+      <div class="hero-left">
+        <h2 id="hero-title">Tu Sistema de Gestión de Ventas Integral</h2>
+        <h3>Fácil • Eficiente • Pensado para pequeños negocios</h3>
+        <p>Administra caja, inventario, cuentas corrientes y reportes desde una única aplicación local.</p>
+      </div>
+
+      <div class="hero-visual" aria-hidden="true">
+        <div class="mini-dashboard">
+          <div class="card"><div class="stat">Ventas del día</div><div class="value">$0</div></div>
+          <div class="card"><div class="stat">Ganancia</div><div class="value">$0</div></div>
+          <div class="card"><div class="stat">Deudas</div><div class="value">$0</div></div>
+          <div class="card"><div class="stat">Items stock</div><div class="value">0</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MÓDULO CAJA (POS) -->
+    <section id="caja" aria-labelledby="caja-title">
+      <div class="section-header">
+        <h3 id="caja-title">Módulo de Caja (POS)</h3>
+        <div>
+          <span class="badge b-ef">Efectivo</span>
+          <span class="badge b-trans">Transferencias</span>
+          <span class="badge b-fi">Fiados</span>
+        </div>
+      </div>
+
+      <div class="module">
+        <div>
+          <p class="desc">Optimizado para velocidad en el punto de venta: interfaz intuitiva, cobros rápidos y manejo de distintos medios.</p>
+          <div class="features">
+            <div class="feature"><strong>Venta rápida</strong><br>Buscador instantáneo de productos por código o nombre.</div>
+            <div class="feature"><strong>Múltiples medios</strong><br>Efectivo, transferencia, tarjeta y fiado con registro.</div>
+            <div class="feature"><strong>Descuentos y promos</strong><br>Aplicación de descuentos por ítem o total.</div>
+            <div class="feature"><strong>Impresión/Visual ticket</strong><br>Soporte para tickets en pantalla / impresión térmica.</div>
+          </div>
+          <div class="accordion mt" id="caja-acc">
+            <div class="acc-item">
+              <div class="acc-head" data-acc>
+                <h4>Flujo de caja y arqueos</h4>
+                <div class="muted">ver más</div>
+              </div>
+              <div class="acc-body">
+                <p class="muted">Registra aperturas y cierres de caja, arqueos por turno y reportes de discrepancias. Soporta notas de caja y reasignación de pagos.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="media-placeholder">
+            <img src="images/Principal.png" width="350" height="250" alt="POS">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MÓDULO INVENTARIO -->
+    <section id="inventario" aria-labelledby="inv-title">
+      <div class="section-header"><h3 id="inv-title">Módulo de Inventario</h3></div>
+      <div class="module">
+        <div>
+          <p class="desc">Control total del stock: movimientos, alertas, categorización y manejo de proveedores para que siempre tengas visibilidad sobre tus niveles.</p>
+          <div class="features">
+            <div class="feature"><strong>Control por lote</strong><br>Registra lotes y vencimientos (opcional).</div>
+            <div class="feature"><strong>Alertas</strong><br>Notificaciones al llegar a stock mínimo.</div>
+            <div class="feature"><strong>Entrada/Salida</strong><br>Historial de movimientos por usuario.</div>
+            <div class="feature"><strong>Import / Export</strong><br>CSV para migración rápida.</div>
+          </div>
+        </div>
+        <div>
+          <div class="media-placeholder">
+            <img src="images/Stock.png" width="350" height="250" alt="POS">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MÓDULO REPORTES -->
+    <section id="reportes" aria-labelledby="rep-title">
+      <div class="section-header"><h3 id="rep-title">Módulo de Reportes</h3></div>
+      <div class="module">
+        <div>
+          <p class="desc">Reportes claros y exportables: ventas, ganancias, flujo de caja y reportes por producto o cliente.</p>
+          <div class="features">
+            <div class="feature"><strong>Reportes por fecha</strong><br>Filtro por día/semana/mes/rango.</div>
+            <div class="feature"><strong>Export CSV / PDF</strong><br>Exporta informes para contabilidad.</div>
+            <div class="feature"><strong>Dashboards</strong><br>Resúmenes visuales y métricas clave.</div>
+            <div class="feature"><strong>Envio por email</strong><br>Programación de reportes periódicos.</div>
+          </div>
+        </div>
+        <div>
+          <div class="media-placeholder">
+            <img src="images/Reportes.png" width="350" height="250" alt="POS">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MÓDULO CUENTAS CORRIENTES -->
+    <section id="ctas" aria-labelledby="ctas-title">
+      <div class="section-header"><h3 id="ctas-title">Módulo de Cuentas Corrientes</h3></div>
+      <div class="module">
+        <div>
+          <p class="desc">Gestiona créditos y deudas de clientes, registro de pagos parciales y vencimientos con alertas.</p>
+          <div class="features">
+            <div class="feature"><strong>Registro de fiados</strong><br>Historial por cliente.</div>
+            <div class="feature"><strong>Pagos parciales</strong><br>Saldo y movimientos visibles.</div>
+            <div class="feature"><strong>Recordatorios</strong><br>Alertas de vencimiento y seguimiento.</div>
+            <div class="feature"><strong>Export histórico</strong><br>Para conciliaciones.</div>
+          </div>
+        </div>
+        <div>
+          <div class="media-placeholder">
+            <img src="images/CtaCte.png" width="350" height="250" alt="POS">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DASHBOARD -->
+    <section id="dashboard" aria-labelledby="dash-title">
+      <div class="section-header"><h3 id="dash-title">Dashboard de Estadísticas</h3></div>
+      <p class="desc">Panel central con: ventas totales, ticket promedio, productos top, rotación de stock y gráficos de tendencia.</p>
+      <div class="features mt">
+        <div class="feature"><strong>KPI en tiempo real</strong><br>Ventas del día, ganancias, items en stock.</div>
+        <div class="feature"><strong>Productos TOP</strong><br>Ranking por ventas y margen.</div>
+        <div class="feature"><strong>Tendencias</strong><br>Comparativo mes a mes.</div>
+      </div>
+    </section>
+
+    <!-- MULTI-USUARIO -->
+    <section id="multi" aria-labelledby="multi-title">
+      <div class="section-header"><h3 id="multi-title">Multi-Usuario · Roles y Permisos</h3></div>
+      <p class="desc">Control de accesos con roles predefinidos y permisos configurables por administrador.</p>
+      <table aria-label="Roles y permisos">
+        <thead><tr><th>Rol</th><th>Permisos típicos</th></tr></thead>
+        <tbody>
+          <tr><td>Administrador/es</td><td>Acceso total: configurar, licencias, backups, usuarios, reportes</td></tr>
+          <tr><td>Cajero/s</td><td>Vender, abrir/cerrar caja, ver reportes básicos</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- REQUISITOS -->
+    <section id="requisitos" aria-labelledby="req-title">
+      <div class="section-header"><h3 id="req-title">Requisitos del Sistema</h3></div>
+      <ul class="muted mt">
+        <li>Sistemas operativos: Windows 7 en adelante (x64)</li>
+        <li>Memoria: mínimo 4 GB RAM</li>
+        <li>Espacio en disco: 500 MB (más para backups y datos)</li>
+        <li>Resolución recomendada: 1280×720 o superior</li>
+        <li>Base de datos: SQLite integrada (local)</li>
+      </ul>
+    </section>
+
+    <!-- LICENCIAS -->
+    <section id="licencia" aria-labelledby="lic-title">
+      <div class="section-header"><h3 id="lic-title">Sistema de Licencias y Activación</h3></div>
+      <p class="desc">Modelos de licencia flexibles: Plan de Suscripción (mensual/anual) con activación directa.</p>
+      <div class="features mt">
+        <div class="feature"><strong>Pago único</strong><br>Licencia de 30 días de activación local mediante clave.</div>
+        <div class="feature"><strong>Suscripción</strong><br>Activación online con renovación.</div>
+        <div class="feature"><strong>Control offline</strong><br>Mecanismo de activación por archivo/clave para entornos sin internet.</div>
+      </div>
+      <div class="mt" style="display:flex;gap:12px;align-items:center">
+        <div class="kbd" id="license-key">KEY-DEMO-XXXX-0000</div>
+        <button class="btn outline" id="copy-key">Ejemplo de clave</button>
+      </div>
+    </section>
+
+    <!-- LÓGICA DE VENCIMIENTO -->
+    <section id="demo" aria-labelledby="demo-title">
+      <div class="section-header"><h3 id="demo-title">Lógica de Vencimiento (30 días)</h3></div>
+      <p class="desc">La demo expira 30 días después de la primera ejecución. Si la fecha actual supera la +30 días, el sistema cambia a <strong>Modo Demo</strong> y limita funcionalidades.</p>
+    </section>
+
+    <!-- RESTRICCIONES MODO DEMO -->
+    <section aria-labelledby="restr-title">
+      <div class="section-header"><h3 id="restr-title">Restricciones del Modo Demostración</h3></div>
+      <p class="muted">La siguiente tabla muestra ejemplos de restricciones que aplica el modo demo.</p>
+      <table aria-describedby="restr-demo">
+        <thead><tr><th>Característica</th><th>Restricción en Modo Demo</th></tr></thead>
+        <tbody>
+          <tr><td>Módulo Caja (POS)</td><td>Límite de 100 ventas mensuales. Se resetea cada mes calendario.</td></tr>
+          <tr><td>Exportar</td><td>Deshabilitada la exportación de Reportes (CSV) e Inventario (Excel).</td></tr>
+          <tr><td>Usuarios</td><td>Máximo 1 usuario/cuenta.</td></tr>
+          <tr><td>Inventario</td><td>Límite máximo de 50 productos.</td></tr>
+          <tr><td>Backups</td><td>Backups manuales bloqueados. (Auto-backups siguen funcionando para seguridad).</td></tr>
+          <tr><td>Reportes históricos</td><td>Solo permite ver las ventas del día actual. El selector de fecha está bloqueado.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- CONTACTO / FOOTER -->
+    <section id="contact" aria-labelledby="contact-title">
+      <div class="section-header"><h3 id="contact-title">Contacto</h3></div>
+      <p class="muted">¿Querés una demostración o tenés una consulta? Contactanos:</p>
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:12px">
+        <a class="btn" title="Enviar email">lurdciano@gmail.com</a>
+        <a class="btn outline" href="https://terracode.site/" title="Visitar página">TerraCode</a>
+      </div>
+      <footer class="mt">
+        <div>© <strong>TerraCode</strong> <span class="muted">- 2026</span></div>
+        <div class="social muted">Reconquista · Santa Fe</div>
+      </footer>
+    </section>
+
+  </div>
+
+  <!-- Lightbox Modal -->
+  <div id="image-modal">
+    <div class="modal-content">
+      <span class="modal-close">&times;</span>
+      <img id="modal-image" src="" alt="Vista ampliada">
+    </div>
+  </div>
+
+  <!-- JavaScript (sin cambios) -->
+  <script>
+    document.querySelectorAll('[data-scroll]').forEach(function(link){
+      link.addEventListener('click', function(e){
+        e.preventDefault();
+        const href = this.getAttribute('href');
+        const target = document.querySelector(href);
+        if(target) target.scrollIntoView({behavior:'smooth', block:'start'});
+      });
+    });
+
+    document.querySelectorAll('[data-acc]').forEach(function(head){
+      head.addEventListener('click', function(){
+        const item = this.closest('.acc-item');
+        item.classList.toggle('acc-open');
+      });
+    });
+
+    (function demoSim(){
+      const msPerDay = 1000*60*60*24;
+      const installKey = 'tc_installDate_v1';
+      if(!localStorage.getItem(installKey)){
+        localStorage.setItem(installKey, new Date().toISOString());
+      }
+      const installDate = new Date(localStorage.getItem(installKey));
+      const now = new Date();
+      const days = Math.floor((now - installDate) / msPerDay);
+      const maxDays = 30;
+      const daysLeft = Math.max(0, maxDays - days);
+    })();
+
+    document.getElementById('copy-key').addEventListener('click', function(){
+      const key = document.getElementById('license-key').textContent;
+      if(navigator.clipboard){
+        navigator.clipboard.writeText(key).then(()=>alert('Clave copiada: ' + key));
+      } else {
+        const tmp = document.createElement('textarea');
+        tmp.value = key; document.body.appendChild(tmp);
+        tmp.select();
+        document.execCommand('copy');
+        tmp.remove();
+        alert('Clave copiada: ' + key);
+      }
+    });
+
+    document.querySelectorAll('[data-acc]').forEach(function(head){
+      head.setAttribute('tabindex', '0');
+      head.addEventListener('keydown', function(e){
+        if(e.key === 'Enter' || e.key === ' '){
+          e.preventDefault(); this.click();
+        }
+      });
+    });
+
+    const revealElems = document.querySelectorAll('section');
+    const io = new IntersectionObserver((entries)=>{
+      entries.forEach(e=>{ if(e.isIntersecting){
+        e.target.style.transform = 'translateY(0)';
+        e.target.style.opacity = '1';
+        io.unobserve(e.target);
+      }});
+    }, {threshold:0.05});
+    revealElems.forEach(el=>{
+      el.style.transition = 'all 600ms cubic-bezier(.2,.8,.2,1)';
+      el.style.transform = 'translateY(8px)';
+      el.style.opacity = '0.95';
+      io.observe(el);
+    });
+
+    (function initLightbox(){
+      const modal = document.getElementById('image-modal');
+      const modalImg = document.getElementById('modal-image');
+      const closeBtn = document.querySelector('.modal-close');
+      document.querySelectorAll('.media-placeholder img').forEach(img=>{
+        img.style.cursor = 'zoom-in';
+        img.addEventListener('click', function(){
+          modalImg.src = this.src;
+          modal.style.display = 'flex';
+          document.body.style.overflow = 'hidden';
+        });
+      });
+      closeBtn.addEventListener('click', ()=>{ modal.style.display = 'none'; document.body.style.overflow = 'visible'; });
+      modal.addEventListener('click', e=>{ if(e.target === modal){ modal.style.display = 'none'; document.body.style.overflow = 'visible'; }});
+      document.addEventListener('keydown', e=>{
+        if(e.key === "Escape" && modal.style.display === 'flex'){
+          modal.style.display = 'none';
+          document.body.style.overflow = 'visible';
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
