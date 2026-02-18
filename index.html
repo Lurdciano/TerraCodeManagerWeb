@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>TerraCodeManager — Sistema de Gestión</title>
   <meta name="description" content="TerraCodeManager — Sistema de gestión de ventas, inventario y reportes para pequeños comercios. Demo descargable." />
+  <link rel="icon" href="images/icon.ico" type="image/x-icon">
+  <link rel="shortcut icon" href="images/icon.ico" type="image/x-icon">
   <style>
     /* ====== Variables de tema ====== */
     :root{
@@ -177,21 +179,10 @@
     .b-gain{background:linear-gradient(90deg,var(--accent-ganancia), #ffd667)}
     .b-total{background:linear-gradient(90deg,var(--accent-cyan), #00e1ff);color:#03303a}
 
-    #image-modal{
-      display:none;
-      position:fixed;
-      top:0;left:0;
-      width:100%;height:100%;
-      background:rgba(5,11,26,0.97);
-      align-items:center;
-      justify-content:center;
-      z-index:10000;
-      padding:20px;
-      box-sizing:border-box;
-      cursor:zoom-out;
-    }
+    /* Lightbox */
+    #image-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(5,11,26,0.97);align-items:center;justify-content:center;z-index:10000;padding:20px;box-sizing:border-box;cursor:zoom-out}
     .modal-content{position:relative;max-width:92%;max-height:92vh}
-    #modal-image{max-width:100%;max-height:92vh;border-radius:14px;box-shadow:0 30px 80px rgba(0,0,0,0.8);border:2px solid var(--accent-cyan)}
+    #modal-media img,#modal-media video{max-width:100%;max-height:92vh;border-radius:14px;box-shadow:0 30px 80px rgba(0,0,0,0.8);border:2px solid var(--accent-cyan)}
     .modal-close{position:absolute;top:-52px;right:8px;color:#fff;font-size:46px;font-weight:300;cursor:pointer;line-height:1}
 
     .accordion{margin-top:12px;border-radius:10px;overflow:hidden}
@@ -201,9 +192,7 @@
     .acc-head h4{margin:0;font-size:15px}
     .acc-open .acc-body{display:block}
 
-    .progress{
-      background:rgba(255,255,255,0.03);border-radius:10px;overflow:hidden;height:16px;flex:1;border:1px solid var(--glass-2)
-    }
+    .progress{background:rgba(255,255,255,0.03);border-radius:10px;overflow:hidden;height:16px;flex:1;border:1px solid var(--glass-2)}
     .progress > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent-cyan), #00ffd8);width:0%}
 
     table{width:100%;border-collapse:collapse;margin-top:12px;color:var(--muted)}
@@ -212,7 +201,6 @@
 
     footer{display:flex;justify-content:space-between;align-items:center;gap:12px;color:var(--muted);font-size:14px}
     .social a{margin-left:10px;opacity:0.9}
-
     .muted{color:var(--muted)}
     .mt{margin-top:12px}
     .kbd{background:#06121a;padding:6px 8px;border-radius:6px;border:1px solid rgba(255,255,255,0.02);font-weight:700}
@@ -227,8 +215,42 @@
     @media (max-width:640px){
       .hero{padding:22px 18px}
       .hero h3{font-size:24px}
-      html{scroll-padding-top: 100px;}
-      section{scroll-margin-top: 100px;}
+    }
+    .video-demo{
+      text-align:center;
+    }
+    .video-wrapper{
+      position:relative;
+      max-width:920px;
+      margin:24px auto 0;
+      border-radius:16px;
+      overflow:hidden;
+      box-shadow:0 20px 60px rgba(0,0,0,0.7);
+      cursor:pointer;
+    }
+    .video-wrapper img{
+      width:100%;
+      display:block;
+      border-radius:16px;
+    }
+    .play-overlay{
+      position:absolute;
+      top:50%; left:50%;
+      transform:translate(-50%,-50%);
+      width:90px; height:90px;
+      background:rgba(0,212,255,0.95);
+      color:#04202a;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:42px;
+      box-shadow:0 10px 30px rgba(0,212,255,0.4);
+      transition:all 0.3s ease;
+    }
+    .video-wrapper:hover .play-overlay{
+      transform:translate(-50%,-50%) scale(1.1);
+      background:#00d4ff;
     }
   </style>
 </head>
@@ -271,6 +293,16 @@
           <div class="card"><div class="stat">Deudas</div><div class="value">$0</div></div>
           <div class="card"><div class="stat">Items stock</div><div class="value">0</div></div>
         </div>
+      </div>
+    </section>
+
+    <section id="video-demo" class="video-demo" aria-labelledby="video-title">
+      <div class="section-header"><h3 id="video-title" style="color:var(--accent-cyan);">Demo del Sistema en Acción</h3></div>
+      <p class="desc">Funcionalidades de TerraCodeManager en tiempo real.</p>
+      
+      <div class="video-wrapper" id="video-trigger">
+        <img src="images/Principal.png" alt="Miniatura Video Demo">
+        <div class="play-overlay">▶</div>
       </div>
     </section>
 
@@ -471,7 +503,7 @@
   <div id="image-modal">
     <div class="modal-content">
       <span class="modal-close">&times;</span>
-      <img id="modal-image" src="" alt="Vista ampliada">
+      <div id="modal-media"></div>
     </div>
   </div>
 
@@ -546,7 +578,7 @@
 
     (function initLightbox(){
       const modal = document.getElementById('image-modal');
-      const modalImg = document.getElementById('modal-image');
+      const modalMedia = document.getElementById('modal-media');
       const closeBtn = document.querySelector('.modal-close');
       document.querySelectorAll('.media-placeholder img').forEach(img=>{
         img.style.cursor = 'zoom-in';
@@ -563,6 +595,30 @@
           modal.style.display = 'none';
           document.body.style.overflow = 'visible';
         }
+      });
+      document.getElementById('video-trigger').addEventListener('click', function(){
+        modalMedia.innerHTML = `
+          <video controls autoplay style="max-width:100%; max-height:92vh; border-radius:14px;">
+            <source src="images/Demo.mp4" type="video/mp4">
+            Tu navegador no soporta video.
+          </video>
+        `;
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+      });
+
+      function closeModal(){
+        modal.style.display = 'none';
+        document.body.style.overflow = 'visible';
+        modalMedia.innerHTML = ''; // limpiar
+      }
+
+      closeBtn.addEventListener('click', closeModal);
+      modal.addEventListener('click', function(e){
+        if(e.target === modal) closeModal();
+      });
+      document.addEventListener('keydown', function(e){
+        if(e.key === "Escape" && modal.style.display === 'flex') closeModal();
       });
     })();
   </script>
