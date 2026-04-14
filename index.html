@@ -488,11 +488,11 @@
       <div class="section-header"><h3 id="contact-title">Contacto</h3></div>
       <p class="muted">¿Querés una demostración o tenés una consulta? Contactanos:</p>
       <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:12px">
-        <a class="btn" title="Enviar email">lurdciano@gmail.com</a>
+        <button class="btn" id="copy-email" title="Copiar email" data-email="lurdciano">Contactar por Email</button>
         <a class="btn outline" href="https://terracode.site/" title="Visitar página">TerraCode</a>
       </div>
       <footer class="mt">
-        <div>© <strong>TerraCode</strong> <span class="muted">- 2026</span></div>
+        <div> <strong>TerraCode</strong> <span class="muted">- 2026</span></div>
         <div class="social muted">Reconquista · Santa Fe</div>
       </footer>
     </section>
@@ -525,6 +525,15 @@
       });
     });
 
+    document.querySelectorAll('[data-acc]').forEach(function(head){
+      head.setAttribute('tabindex', '0');
+      head.addEventListener('keydown', function(e){
+        if(e.key === 'Enter' || e.key === ' '){
+          e.preventDefault(); this.click();
+        }
+      });
+    });
+
     (function demoSim(){
       const msPerDay = 1000*60*60*24;
       const installKey = 'tc_installDate_v1';
@@ -544,7 +553,8 @@
         navigator.clipboard.writeText(key).then(()=>alert('Clave copiada: ' + key));
       } else {
         const tmp = document.createElement('textarea');
-        tmp.value = key; document.body.appendChild(tmp);
+        tmp.value = key;
+        document.body.appendChild(tmp);
         tmp.select();
         document.execCommand('copy');
         tmp.remove();
@@ -552,28 +562,24 @@
       }
     });
 
-    document.querySelectorAll('[data-acc]').forEach(function(head){
-      head.setAttribute('tabindex', '0');
-      head.addEventListener('keydown', function(e){
-        if(e.key === 'Enter' || e.key === ' '){
-          e.preventDefault(); this.click();
-        }
-      });
-    });
-
-    const revealElems = document.querySelectorAll('section');
-    const io = new IntersectionObserver((entries)=>{
-      entries.forEach(e=>{ if(e.isIntersecting){
-        e.target.style.transform = 'translateY(0)';
-        e.target.style.opacity = '1';
-        io.unobserve(e.target);
-      }});
-    }, {threshold:0.05});
-    revealElems.forEach(el=>{
-      el.style.transition = 'all 600ms cubic-bezier(.2,.8,.2,1)';
-      el.style.transform = 'translateY(8px)';
-      el.style.opacity = '0.95';
-      io.observe(el);
+    document.getElementById('copy-email').addEventListener('click', function(){
+      const user = this.getAttribute('data-email');
+      const domain = 'gmail.com';
+      const email = user + '@' + domain;
+      
+      if(navigator.clipboard){
+        navigator.clipboard.writeText(email).then(()=>{
+          alert('Email copiado: ' + email);
+        });
+      } else {
+        const tmp = document.createElement('textarea');
+        tmp.value = email;
+        document.body.appendChild(tmp);
+        tmp.select();
+        document.execCommand('copy');
+        tmp.remove();
+        alert('Email copiado: ' + email);
+      }
     });
 
     (function initLightbox(){
@@ -583,7 +589,17 @@
       document.querySelectorAll('.media-placeholder img').forEach(img=>{
         img.style.cursor = 'zoom-in';
         img.addEventListener('click', function(){
+          const modalImg = document.createElement('img');
           modalImg.src = this.src;
+          modalImg.alt = this.alt || 'Imagen ampliada';
+          modalImg.style.maxWidth = '100%';
+          modalImg.style.maxHeight = '92vh';
+          modalImg.style.borderRadius = '14px';
+          modalImg.style.boxShadow = '0 30px 80px rgba(0,0,0,0.8)';
+          modalImg.style.border = '2px solid var(--accent-cyan)';
+          
+          modalMedia.innerHTML = '';
+          modalMedia.appendChild(modalImg);
           modal.style.display = 'flex';
           document.body.style.overflow = 'hidden';
         });
@@ -597,12 +613,23 @@
         }
       });
       document.getElementById('video-trigger').addEventListener('click', function(){
-        modalMedia.innerHTML = `
-          <video controls autoplay style="max-width:100%; max-height:92vh; border-radius:14px;">
-            <source src="images/Demo.mp4" type="video/mp4">
-            Tu navegador no soporta video.
-          </video>
-        `;
+        const video = document.createElement('video');
+        video.controls = true;
+        video.autoplay = true;
+        video.style.maxWidth = '100%';
+        video.style.maxHeight = '92vh';
+        video.style.borderRadius = '14px';
+        
+        const source = document.createElement('source');
+        source.src = 'images/Demo.mp4';
+        source.type = 'video/mp4';
+        
+        const fallback = document.createTextNode('Tu navegador no soporta video.');
+        
+        modalMedia.innerHTML = '';
+        video.appendChild(source);
+        video.appendChild(fallback);
+        modalMedia.appendChild(video);
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
       });
